@@ -31,6 +31,11 @@ class UserRegisterResource(Resource):
             print(e)
             return {'result' : 'fail', 'error' : str(e)} , 400
         
+        # 3. 비밀번호 길이가 유효한지 체크
+        #    만약, 비번이 4자리 이상 , 12자리 이하라고 한다면,
+        if len(data['password']) < 4 or len(data['password']) > 12 :
+            return {'result' : 'fail' , 'error' : '비번 길이 에러'}, 400
+        
 
 
 
