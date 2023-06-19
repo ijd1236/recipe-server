@@ -66,12 +66,11 @@ api = Api(app) # Flask 객체에 Api 객체 등록
 
 - 이로써 기본적인 환경설정은 완료했습니다
 
+## POST, GET, PUT, DELETE 등을 사용하기 위한 작업
 
-##  POST, GET, PUT, DELETE
 - POST, GET, PUT, DELETE는 HTTP 프로토콜에서 사용되는 주요한 메서드(Methods)입니다. 
 - 이들 메서드는 웹 애플리케이션에서 클라이언트와 서버 간의 통신을 위해 사용됩니다.
 
-### 사전작업
 
 - 먼저 경로와 API 동작코드(Resource)를 연결하기 위해 add_resource() 함수를 사용해야합니다
 - add_resource()는 API 엔드포인트와 해당 엔드포인트에 대한 동작을 정의하는 데 사용됩니다.
@@ -84,6 +83,7 @@ api = Api(app) # Flask 객체에 Api 객체 등록
 - 두번째론 '/endpoint': 클라이언트가 요청을 보낼 수 있는 엔드포인트의 URL 경로를 지정합니다. 이 경로는 사용자가 지정합니다.
 - 첫번째 resource를 상속받는 클래스를 설정하기 위해 vs코드에 폴더를 생성하고 , 파일을 생성하여 작성하겠습니다.
 - resource라는 새로운 폴더를 생성하고 그 안에 recipe.py라는 파일을 생성하였습니다.
+- 
 ![image](https://github.com/ijd1236/recipe-server/assets/130967884/5847dd27-e9c8-478b-a173-8fe1b6b6f7f6)
 
 - recipe.py 파일에 
@@ -91,13 +91,40 @@ api = Api(app) # Flask 객체에 Api 객체 등록
 class RecipeResourve(Resource):
     pass
 ```
-- 다음과 같이 Rescource 함수를 상속하는 
+- 다음과 같이 Rescource 함수를 상속하는  클래스를 생성하고
+```Python
+from resources.recipe import RecipeListResource
+api.add_resource( RecipeListResource , '/recipes')
+```
+- 함수를 import 하고 엔드포인트에 클래스를 매핑합니다
+
+### 데이터 베이스에 연결함수 만들기
+
+- 서버와 데이터 베이스를 연결하려면 데이터 베이스 접속 정보를 입력해야합니다
+  
+- 새로운 파일 config.py를 만들고
+- 
+  ![image](https://github.com/ijd1236/recipe-server/assets/130967884/45005446-2489-4ec5-afa1-c8829f7148e8)
+  
+- 클래스를 만들고 데이터베이스(MySQL) 정보를 입력합니다. ( 이때 이 정보는 클론하지 말아야합니다.)
+
+- 그 뒤 새로운 파일 mysql_connection.py를 만들고 연결 함수를 작성합니다.
+- 먼저 pip install mysql-connector-python 라이브러리를 설치후
+```Python
+import mysql.connector
+from config import Config
 
 
+def get_connection() :
+    connection = mysql.connector.connect(
+        host = Config.HOST, 
+        database = Config.DATABASE,
+        user = Config.DB_USER,
+        password = Config.DB_PASSWORD
+    )
+
+    return connection
+```
+- 위와 같은 코드를 작성하여 저장합니다.
 
 
-
-파이썬 MySQL Connector 라이브러리 (설치방법)
-Python 에서 MySQL 커넥하는법 (전용 DB 유저 생성 포함)
-Python 에서 MySQL 에 데이터 인서트 하는 방법
-Python MySQL Connector 셀렉트 하는 방법과 코드
