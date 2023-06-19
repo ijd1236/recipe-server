@@ -36,6 +36,9 @@ class UserRegisterResource(Resource):
         if len(data['password']) < 4 or len(data['password']) > 12 :
             return {'result' : 'fail' , 'error' : '비번 길이 에러'}, 400
         
+        # 4. 비밀번호를 암호화 한다.
+        
+        
 
 
 
