@@ -40,7 +40,7 @@ class UserRegisterResource(Resource):
         
         # 4. 비밀번호를 암호화 한다.
         hashed_password = hash_password(data['password'])
-        print(str(hash_password))
+        print(str(hashed_password))
 
         # 5. DB에 이미 회원 정보가 있는지 확인한다.
         try :
