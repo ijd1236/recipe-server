@@ -2,6 +2,8 @@ from flask import Flask
 from flask_restful import Api
 from resources.recipe import RecipeListResource, RecipeResource
 
+from resources.user import UserRegisterResource
+
 app = Flask(__name__)
 
 api = Api(app) # Flask 객체에 Api 객체 등록

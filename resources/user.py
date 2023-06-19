@@ -28,7 +28,9 @@ class UserRegisterResource(Resource):
 
 
         except EmailNotValidError as e :
-            return {'result' : 'fail', 'error' : str(e)} , 
+            print(e)
+            return {'result' : 'fail', 'error' : str(e)} , 400
+        
 
 
 
