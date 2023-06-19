@@ -3,7 +3,9 @@ from flask import request
 from mysql_connection import get_connection
 from mysql.connector import Error
 import mysql.connector
-from email_validator import validate_email, EmailNotValidError     
+from email_validator import validate_email, EmailNotValidError
+
+from utils import hash_password     
 
 # EmailNotValidError 이메일이 정상이냐
 
@@ -37,8 +39,19 @@ class UserRegisterResource(Resource):
             return {'result' : 'fail' , 'error' : '비번 길이 에러'}, 400
         
         # 4. 비밀번호를 암호화 한다.
-        
-        
+        hashed_password = hash_password(data['password'])
+        print(str(hash_password))
+
+        # 5. DB에 이미 회원 정보가 있는지 확인한다.
+        try :
+            connection =get_connection()
+            query = '''select *
+                    from user
+                    where email =%s;'''
+            record = (data['email'], )
+
+        except Error as e :
+            pass
 
 
 
