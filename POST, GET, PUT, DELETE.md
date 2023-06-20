@@ -15,6 +15,8 @@
 - DELETE 메서드는 서버에 존재하는 리소스를 삭제하기 위해 사용됩니다. 
 - 클라이언트가 삭제할 리소스의 식별자를 서버에 전송하면, 서버는 해당 리소스를 삭제합니다.
 
+- GET 과 DELET는 Body에 데이터를 넣지 않습니다.
+
 ## 데이터 등록하기
 
 - 서버에서 데이터 베이스에 데이터를 등록하는 방법을 실행합니다
@@ -120,6 +122,66 @@ class RecipeListResource(Resource):
 - 데이터베이스 내에 저장되어 있는 데이터를 검색합니다.
 
 - 이때는 get 함수를 사용합니다.
+
+
+```Python
+    def get(self) :
+
+        # 1. 클라이언트로 부터 데이터를 받아온다.
+        # 2. 저장된 레시피 리스트를 DB로부터 가져온다.
+        # 2-1. DB 커넥션
+
+        try :
+            connection = get_connection()
+
+            # 2-2. 쿼리문 만든다.
+
+            qeury = '''select r.*, u.username
+                    from recipe r
+                    join user u 
+                    on r.user_id = u.id
+                    where is_publish = 1;'''
+            # 2-3 . 변수로 처리할 부분은 변수처리한다.
+
+            # 2-4. 커서 가져온다,
+            cursor = connection.cursor(dictionary= True) 포스트맨에 출력해야하기에  # dictionary = True 를 입력하여 MySQL 커서 객체를 생성할 때
+            # 딕셔너리 형식으로 결과를 반환하도록 지정합니다.
+            # 2-5. 쿼리문을 커서로 실행한다.
+            cursor.execute(qeury)
+
+            # 2-6.실행결과를 가져온다.
+            result_list = cursor.fetchall()   # cursor.fetchall() 함수를 사용하여 실행한 쿼리의 결과를 모두 가져와서 result_list 변수에 저장합니다
+            print(result_list)   # vs코드 터미널에서도 출력해서 보이게.
+
+            cursor.close()
+            connection.close()
+        
+        except Error as e :
+            print(e)
+            return {'result' : 'fail', 'error' : str(e)}, 500
+
+    
+
+        # 3. 데이터가공이 필요하면, 가공한 후에
+        #    클라이언트에 응답한다.
+        # 해당 데이터는 creat_at 과 updated_at 이 시간으로 되어있어 가공해야합니다
+        
+        i = 0
+        for row in result_list :
+            result_list[i]['created_at'] = row['created_at'].isoformat()    
+            result_list[i]['updated_at'] = row['updated_at'].isoformat()    
+            i = i + 1
+
+        return {'result' : 'success', 
+                'count' : len(result_list),
+                'items' : result_list}
+```
+
+- 해당 코드를 입력후 flask run으로 서버 실행 후 포스트맨에서 실행하면
+
+![image](https://github.com/ijd1236/recipe-server/assets/130967884/700fe671-e7f1-4bbe-ac35-cb0a840aa858)
+
+- 다음과 같이 데이터베이스에 있는 데이터를 출력해서 보여줍니다
 
 
 
