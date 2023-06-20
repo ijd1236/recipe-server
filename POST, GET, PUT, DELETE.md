@@ -117,7 +117,7 @@ class RecipeListResource(Resource):
 - mysql 에 들어가서 데이터가 정상적으로 들어갔는지 확인합니다
 
 
-## 데이터 검색하기
+## 저장된 데이터 가져오기
 
 - 데이터베이스 내에 저장되어 있는 데이터를 검색합니다.
 
@@ -184,8 +184,171 @@ class RecipeListResource(Resource):
 - 다음과 같이 데이터베이스에 있는 데이터를 출력해서 보여줍니다
 
 
+# 특정 데이터 가져오기, 수정, 삭제
+
+- 저장된 데이터중 특정한 레시피만 검색해서 보여주거나 수정, 삭제를 할 수 있습니다.
+
+-  그러기위해 RecipeResource class 와 app.py 에서 API 엔드포인트를 새로만들어줍니다
+
+```Python
+api.add_resource(RecipeResource, '/recipes/<int:recipe_id>')
+```
+
+- 다음과 같이 엔드포인트를 만들어 줍니다
+- 이때 , recipes 주소 뒤에 /<int:recipe_id>를 입력하여 숫자를 입력하면 해당 숫자의 데이터를 찾아냅니다.
 
   
+## 특정 데이터만 가져오기
+
+
+
+```Python
+class RecipeResource(Resource):
+    
+    # GET 메소드에서, 경로로 넘어오는 변수는 get 함수의 파라미터로사용
+
+   
+
+    def get(self, recipe_id):   # 모든 데이터를 찾아올때와 다르게 self 외에도 recipe_id 라는 매개변수로 특정 데이터를 찾습니다.
+
+
+        # 1. 클라이언트로부터 데이터를 받아온다.
+        # 위의 recipe_id 에 담겨있다.
+        print(recipe_id)
+        print(type(recipe_id))
+        
+        # 2. 데이터베이스에 레시피 아이디로 쿼리한다.
+        try :
+
+            
+            connection = get_connection()
+
+            query = '''
+                    select r.*, u.username
+                    from recipe r
+                    join user u on r.user_id = u.id
+                    where r.id = %s;'''
+            record = (recipe_id, )  # 하나만 있으면 튜플이 되지 않아서 , 를 입력해줘야합니다
+            cursor =connection.cursor(dictionary=True)  #dictionary=True = json 형식으로가져오게한다
+            cursor.execute(query, record)
+            result_list = cursor.fetchall()    #fetchall 데이터 있는거 전부 가져와라
+            print(result_list)
+            cursor.close()
+            connection.close()
+
+        except Error as e :
+            print(e)
+            return{'result': 'fail', 'error':str(e)}, 500
+        # 3. 데이터가공이 필요하면, 가공한 후에
+        #    클라이언트에 응답한다.
+        i = 0
+        for row in result_list :
+            result_list[i]['created_at'] = row['created_at'].isoformat()    
+            result_list[i]['updated_at'] = row['updated_at'].isoformat()   
+            i = i + 1
+        if len(result_list) != 1:
+            return{'result' : 'success', 'item' : {}}
+        else :
+            return{'result' : 'success', 'item' : result_list[0]}
+```
+
+- 코드 입력후 서버 실행 포스트맨에서 확인합니다
+
+  ![image](https://github.com/ijd1236/recipe-server/assets/130967884/de35106a-4df2-4b0e-8167-e91d09d0fcb5)
+
+- 특정 데이터가 출력된것을 확인합니다
+
+## 특정 데이터 수정하기
+
+- 포스트맨에서 데이터를 수정하여 데이터베이스에 보낼 수 있습니다
+
+-  이때는 PUT 을 사용합니다.
+
+  
+
+```Python
+    def put(self, recipe_id) :
+
+        # 1. 클라이언트로부터 데이터 받아온다.
+        print(recipe_id)
+        # body 에 있는 json 데이터를 받아온다.
+        data = request.get_json()
+        # 2. 데이터베이스에 update 한다.
+        try : 
+            connection = get_connection()
+            query = '''  update recipe
+                        set name = %s, description =%s, num_of_servings = %s , cook_time = %s,
+                        directions = %s, is_publish = %s
+                        where id = %s and user_id = %s;
+                    '''
+            record = ( data['name'], 
+                      data['description'] , 
+                      data['num_of_servings'], 
+                      data['cook_time'], 
+                      data['directions'], 
+                      data['is_publish'],
+                      recipe_id)               # query와 record 에 데이터 베이스의 내용, 포스트맨 body에 들어갈 내용을 입력합니다
+            cursor = connection.cursor()
+            cursor.execute(query, record)
+            connection.commit()    # 데이터베이스에 적용시킬것이니 커밋해줍니다.
+            cursor.close()
+            connection.close()
+
+        except Error as e :
+            print(e)
+            return {'result': 'fail', 'error' : str(e)}, 500
+        
+
+        return {'result' : 'success'}
+
+
+![image](https://github.com/ijd1236/recipe-server/assets/130967884/bb7cca87-d612-4683-a1ff-81d378ceb261)
+
+- 포스트맨에서 수정할 데이터의 주소 10 (recipe_id) 를 입력, 그리고 Body에 수정할 내용을 입력하고 전송 후
+- Mysql 데이터베이스에서 수정됐는지 확인합니다.
+
+## 특정 데이터 삭제하기
+
+- 특정 데이터를 찾아 그 데이터를  삭제합니다
+
+```Python
+    def delete(self, recipe_id):
+        # 1. 클라이언트로부터 데이터 받아온다
+        print(recipe_id)
+
+        # 2. DB에서 삭제한다
+
+        
+        try:
+            connection = get_connection()
+            query = ''' delete from recipe
+                        where id = %s and user_id = %s;
+                    '''
+            record = (recipe_id ,)   # 튜플에 하나 넣을때는 , 를 넣어야 튜플 유지됨
+            cursor = connection.cursor()
+            cursor.execute(query,record)
+            connection.commit()
+            cursor.close()
+            connection.close()
+        except Error as e :
+            print(e)
+            return{'result' : 'success', 'error' : str(e)}
+
+
+
+        # 3. 결과를 응답한다.
+
+        return {'result' : 'success'}
+
+```
+
+- 코드를 입력후 서버를 실행, 포스트맨에서
+  
+![image](https://github.com/ijd1236/recipe-server/assets/130967884/df01afa9-46b5-4217-91d1-22f86a0c99d8)
+
+- 주소를 입력후 전송, Mysql에서 해당 데이터가 삭제됐는지 확인합니다.
+
+
 
 
 
