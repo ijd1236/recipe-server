@@ -132,7 +132,128 @@ class PhotoResource(Resource):
 ![image](https://github.com/ijd1236/recipe-server/assets/130967884/a42d34c8-65d7-4b2d-9148-59e024cbe300)
 
 - 그리고 버킷에도 저장됩니다.
-- 
+
+## 사진 정보를 분석해서 보여주기
+https://docs.aws.amazon.com/ko_kr/rekognition/latest/dg/labels-detect-labels-image.html
+
+![20230626_144237](https://github.com/ijd1236/recipe-server/assets/130967884/8f007a85-7e62-49ae-8353-1f0c3625adbe)
+
+- Amazon Rekognition의 이미지 레이블 감지를 이용합니다.
+
+![20230626_144920](https://github.com/ijd1236/recipe-server/assets/130967884/eea716bc-53c6-4b10-b348-0d3e019a1f07)
+
+- 먼저 IAM에서 권한을 부여해줘야합니다 AmazonRekognitonFullAccess를 권한추가해줍니다.
+
+![20230626_144929](https://github.com/ijd1236/recipe-server/assets/130967884/3323d5a5-9774-43cd-8ae0-cc85626ce864)
+
+- 그 후 예제 함수를 복사해 vs코드에 위에서 입력했던 사진업로드 API에 추가합니다
+
+```Python
+class PhotoResource(Resource):
+
+    def post(self):
+
+        print(request.files)
+
+        # 사진이 필수인 경우의 코드
+        if 'photo' not in request.files :
+            return {'result' : 'fail', 'error' : '파일 없음'}, 400
+        
+        # 유저가 올린 파일을 변수로 만든다.
+        file = request.files['photo']
+
+        # 파일명을 유니크하게 만들어준다.
+
+        current_time = datetime.now()
+
+        print(current_time.isoformat().replace(':', '_' ).replace('.','_')+'.jpg')
+
+        new_filename = current_time.isoformat().replace(':', '_' ).replace('.','_')+'.jpg'
+
+        # 새로운 파일명으로, s3에 파일을 업로드합니다.
+
+        try:
+            s3 = boto3.client('s3', 
+                        aws_access_key_id = Config.AWS_ACCESS_KEY_ID,
+                        aws_secret_access_key = Config.AWS_SECRET_ACCESS_KEY
+                        )
+            
+            s3.upload_fileobj(file,
+                               Config.S3_BUCKET, 
+                               new_filename, 
+                               ExtraArgs = {'ACL':'public-read', 'ContentType':'image/jpeg'})
+
+        except Exception as e :
+            print(str(e))
+            return{'result':'fail', 'error':str(e)}, 500
+
+        # 위에서 저장한 사진의 URL 주소를
+        # DB에 저장해야 한다
+
+        # URL 주소는 = 버킷명.s3주소/우리가만든 파일명
+        file_url = Config.S3_BASE_URL + new_filename
+
+
+        # Object Detection 한다
+        # Rekognition 서비스 이용
+
+        # 첫번째 파라미터는 파일명, 두번째 파라미터는 버킷명
+        
+        label_list = self.detect_labels(new_filename, Config.S3_BUCKET)      # 메서드 안에서 메서드를 호출할 때는 다음과 같이 self.메서드() 형식으로 호출해야 합니다.
+
+
+
+        # 잘 되었으면, 클라이언트에 데이터를 응답한다.
+
+        return {'result' : 'seccess', 'file_url': file_url,
+                'count' : len(label_list), 
+                'items' :label_list}
+    def detect_labels(self, photo, bucket):  # self를 추가해야합니다.
+
+        client = boto3.client('rekognition',
+                            'us-east-1',
+                            aws_access_key_id = Config.AWS_ACCESS_KEY_ID,
+                            aws_secret_access_key = Config.AWS_SECRET_ACCESS_KEY)
+
+        response = client.detect_labels(Image={'S3Object':{'Bucket':bucket,'Name':photo}},
+            MaxLabels=10)
+
+        print('Detected labels for ' + photo) 
+        print()   
+
+
+        label_list = []
+
+        for label in response['Labels']:
+
+            label_list.append(label['Name'])
+            print ("Label: " + label['Name'])
+            print ("Confidence: " + str(label['Confidence']))
+            print ("Instances:")
+            for instance in label['Instances']:
+                print ("  Bounding box")
+                print ("    Top: " + str(instance['BoundingBox']['Top']))
+                print ("    Left: " + str(instance['BoundingBox']['Left']))
+                print ("    Width: " +  str(instance['BoundingBox']['Width']))
+                print ("    Height: " +  str(instance['BoundingBox']['Height']))
+                print ("  Confidence: " + str(instance['Confidence']))
+                print()
+
+            print ("Parents:")
+            for parent in label['Parents']:
+                print ("   " + parent['Name'])
+            print ("----------")
+            print ()
+        return label_list
+
+```
+
+- 이와 같은 코드로 완성합니다.
+![image](https://github.com/ijd1236/recipe-server/assets/130967884/1b6d04fa-ee68-4e90-8414-8dcd4ab048f4)
+
+![image](https://github.com/ijd1236/recipe-server/assets/130967884/913950f8-1429-444e-8b6f-16078dba6c17)
+
+- 성공적으로 완료했으면 vs코드와 포스트맨에 다음과 같이 출력됩니다.
 
 
 
