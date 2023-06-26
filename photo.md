@@ -85,20 +85,17 @@ class PhotoResource(Resource):
 
           # 여기서 Config 에 들어갈 내용들은 config.py에 클래스를 등록하고 꺼내서 사용합니다. 코드는 다음과 같습니다
           
-
-          ```Python
-                  class Config :
+                #   class Config :
             
-                AWS_ACCESS_KEY_ID = '키'
-                AWS_SECRET_ACCESS_KEY = '시크릿키'
-                S3_BUCKET = ' S3 만들때 입력한 이름'
-                S3_BASE_URL = 'https://'+S3_BUCKET+'.s3.amazonaws.com/' # URL 형식
+                # AWS_ACCESS_KEY_ID = '키'
+                # AWS_SECRET_ACCESS_KEY = '시크릿키'
+                # S3_BUCKET = ' S3 만들때 입력한 이름'
+                # S3_BASE_URL = 'https://'+S3_BUCKET+'.s3.amazonaws.com/' # URL 형식
                         
             s3.upload_fileobj(file,
                                Config.S3_BUCKET, 
                                new_filename, 
                                ExtraArgs = {'ACL':'public-read', 'ContentType':'image/jpeg'})
-      ```
 
         except Exception as e :
             print(str(e))
