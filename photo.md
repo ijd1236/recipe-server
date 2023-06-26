@@ -36,6 +36,9 @@
 - 
 ## 서버를 만들고 파일 업로드하기
 
+- severless framework에서 aws-image-openapi-test 이름의 앱을 새로 만들어 줍니다.
+- 서버를 만든후 VS코드에서 배포까지 완료합니다
+
 
 - severless f
 
