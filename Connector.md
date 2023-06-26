@@ -104,7 +104,8 @@ api.add_resource( RecipeListResource , '/recipes')
   
 - 새로운 파일 config.py를 만들고
 - 
-  ![image](https://github.com/ijd1236/recipe-server/assets/130967884/45005446-2489-4ec5-afa1-c8829f7148e8)
+![image](https://github.com/ijd1236/recipe-server/assets/130967884/7efe9407-723e-4a6d-b983-20ebdf16bd31)
+
   
 - 클래스를 만들고 데이터베이스(MySQL) 정보를 입력합니다. ( 이때 이 정보는 클론하지 말아야합니다.)
 
