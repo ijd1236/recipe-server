@@ -36,13 +36,109 @@
 - 
 ## 서버를 만들고 파일 업로드하기
 
+![image](https://github.com/ijd1236/recipe-server/assets/130967884/4bc4f6b2-b74c-4478-a223-e71f1dc4679f)
+
+
+- 먼저 API를 테스트할 postman에 리퀘스트를 생성해줍니다
+
+-  Key 에는 photo(File) Value 에는 사진을 업로드시켜줍니다
+
+
+
 - severless framework에서 aws-image-openapi-test 이름의 앱을 새로 만들어 줍니다.
 - 서버를 만든후 VS코드에서 배포까지 완료합니다
-- vs코드에서 boto3 라이브러리를 설치해줍니다
+- vs코드에서 boto3 라이브러리를 설치해줍니다.
 - boto3는 파이썬에서 AWS(Amazon Web Services)를 제어하기 위한 오픈 소스 라이브러리입니다. boto3를 사용하면 AWS의 다양한 서비스에 대한 클라이언트를 생성하고, 리소스를 관리하며, API 호출을 수행할 수 있습니다.
 - 이제 사진을 올리는 class를 작성합니다
 
+```Python
+
+class PhotoResource(Resource):
+
+    def post(self):
+
+        print(request.files)
+
+        # 사진이 필수인 경우의 코드
+        if 'photo' not in request.files :
+            return {'result' : 'fail', 'error' : '파일 없음'}, 400
+        
+        # 유저가 올린 파일을 변수로 만든다.
+        file = request.files['photo']
+
+        # 파일명을 유니크하게 만들어준다.
+
+        current_time = datetime.now()
+
+        print(current_time.isoformat().replace(':', '_' ).replace('.','_')+'.jpg')
+
+        new_filename = current_time.isoformat().replace(':', '_' ).replace('.','_')+'.jpg'
+
+        # 새로운 파일명으로, s3에 파일을 업로드합니다.
+
+        try:
+            s3 = boto3.client('s3', 
+                        aws_access_key_id = Config.AWS_ACCESS_KEY_ID,
+                        aws_secret_access_key = Config.AWS_SECRET_ACCESS_KEY
+                        )
+
+
+          # 여기서 Config 에 들어갈 내용들은 config.py에 클래스를 등록하고 꺼내서 사용합니다. 코드는 다음과 같습니다
+          
+
+          ```Python
+                  class Config :
+            
+                AWS_ACCESS_KEY_ID = '키'
+                AWS_SECRET_ACCESS_KEY = '시크릿키'
+                S3_BUCKET = ' S3 만들때 입력한 이름'
+                S3_BASE_URL = 'https://'+S3_BUCKET+'.s3.amazonaws.com/' # URL 형식
+                        
+            s3.upload_fileobj(file,
+                               Config.S3_BUCKET, 
+                               new_filename, 
+                               ExtraArgs = {'ACL':'public-read', 'ContentType':'image/jpeg'})
+      ```
+
+        except Exception as e :
+            print(str(e))
+            return{'result':'fail', 'error':str(e)}, 500
+
+        # 위에서 저장한 사진의 URL 주소를
+        # DB에 저장해야 한다
+
+        # URL 주소는 = 버킷명.s3주소/우리가만든 파일명
+        file_url = Config.S3_BASE_URL + new_filename
+
+
+        # 첫번째 파라미터는 파일명, 두번째 파라미터는 버킷명
+
+
+
+        # 잘 되었으면, 클라이언트에 데이터를 응답한다.
+
+        return {'result' : 'seccess', 'file_url': file_url}
+```
+
+![image](https://github.com/ijd1236/recipe-server/assets/130967884/e42e3b06-cb17-4974-af70-f8ad5326c602)
+
+- app.py 에 api를 작동시킬 코드를 만들고 flask run을 입력해 작동시키고 제대로 나오는지 확인합니다
+
+![image](https://github.com/ijd1236/recipe-server/assets/130967884/e61d136f-f6ea-4543-a533-26e134afd985)
+
+- 제대로 실행됐으면 다음과 같이 URL 주소가 뜨며
+
+![image](https://github.com/ijd1236/recipe-server/assets/130967884/275951d4-47bf-48cd-8895-d6f1b11d37a4)
+
+- 해당 주소로 검색하면 사진이 나옵니다.
+
+![image](https://github.com/ijd1236/recipe-server/assets/130967884/a42d34c8-65d7-4b2d-9148-59e024cbe300)
+
+- 그리고 버킷에도 저장됩니다.
 - 
+
+
+
 
 
 
