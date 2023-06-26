@@ -38,9 +38,11 @@
 
 - severless framework에서 aws-image-openapi-test 이름의 앱을 새로 만들어 줍니다.
 - 서버를 만든후 VS코드에서 배포까지 완료합니다
+- vs코드에서 boto3 라이브러리를 설치해줍니다
+- boto3는 파이썬에서 AWS(Amazon Web Services)를 제어하기 위한 오픈 소스 라이브러리입니다. boto3를 사용하면 AWS의 다양한 서비스에 대한 클라이언트를 생성하고, 리소스를 관리하며, API 호출을 수행할 수 있습니다.
+- 이제 사진을 올리는 class를 작성합니다
 
-
-- severless f
+- 
 
 
 
